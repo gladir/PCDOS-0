@@ -1,5 +1,5 @@
 # PCDOS-0
-Clone de MS-DOS en Pascal 
+Clone de PC-DOS en Pascal 
 
 ![image](https://user-images.githubusercontent.com/11842176/201422309-2369cd06-1113-439a-858b-b520f0179e03.png)
 
