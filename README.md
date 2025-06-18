@@ -13,6 +13,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<th>Description</th>	
 		</tr>
 		<tr>
+			<td><b>ACALC.PAS</b></td>
+			<td>Cette commande permet de calculer la valeur d'une expression mathématique.</td>
+		</tr>
+		<tr>
 		 	<td><b>APPEND.PAS</b></td>
 			<td>Cette commande permet d'ouvrir des fichiers quelconque se trouvant dans les répertoires spécifiés comme s'il s'agissait du répertoire courant.</td>
 		</tr>
