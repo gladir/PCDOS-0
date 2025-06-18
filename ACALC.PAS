@@ -141,7 +141,8 @@ Begin
   End;
   'A'..'Z', 'a'..'z':Begin
    s:='';
-   While (Position <= Length(Expression)) and IsLetter(Expression[Position]) do Begin
+   While (Position <= Length(Expression)) and 
+         (IsLetter(Expression[Position]) or IsDigit(Expression[Position])) do Begin
     s:=s+UpCase(Expression[Position]);
     Inc(Position);
    End;
@@ -182,13 +183,15 @@ Var
  ValueStack:Array[1..MaxStack] of Real;
  OperStack:Array[1..MaxStack] of TokenRec;
  ValTop,OpTop:Integer;
- Token:TokenRec;
  CurrentToken: TokenRec;
+ FuncToken: TokenRec;
+ NeedCloseParen: Boolean;
 Begin
  ValTop:=0;
  OpTop:=0;
  ErrorCode:=0;
- Position:=1;  { R�initialise la position de d�part de l'expression }
+ Position:=1;
+ NeedCloseParen := False;
  While ErrorCode = 0 do Begin
   ParseToken(CurrentToken);
   Case CurrentToken.Kind of
@@ -229,16 +232,31 @@ Begin
     OperStack[OpTop]:=CurrentToken;
    End;
    _Function:Begin
-    Inc(OpTop);
-    OperStack[OpTop]:=CurrentToken;
-    ParseToken(Token);  { Demande le param�tre de la fonction }
-    If Token.Kind<>Number Then Begin
-     ErrorCode:=1;
+    FuncToken := CurrentToken;
+    ParseToken(CurrentToken);
+    If CurrentToken.Kind<>OpenParen Then Begin
+     ErrorCode := 1;
      Break;
     End;
-    Inc(ValTop);
-    ValueStack[ValTop]:=CalcFunction(OperStack[OpTop].Symbol,Token.Value,0);
-    Dec(OpTop);
+    
+    { Evaluate function argument }
+    Position := Position;  { Save position }
+    ParseToken(CurrentToken);
+    If CurrentToken.Kind=Number Then Begin
+     Inc(ValTop);
+     ValueStack[ValTop]:=CalcFunction(FuncToken.Symbol,CurrentToken.Value,0);
+    End
+    Else
+    Begin
+     ErrorCode := 1;
+     Break;
+    End;
+    
+    ParseToken(CurrentToken);
+    If CurrentToken.Kind<>CloseParen Then Begin
+     ErrorCode := 1;
+     Break;
+    End;
    End;
    OpenParen:Begin
     Inc(OpTop);
