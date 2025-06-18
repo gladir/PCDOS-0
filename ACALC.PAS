@@ -21,7 +21,7 @@ Const
   MaxStack = 100;
 
 Var
- Expression:String;
+ CurrParam,Expression:String;
  Position:Integer;
  OutputFormat:Char;
  I:Integer;
@@ -29,7 +29,17 @@ Var
  ErrorCode:Integer;
 
 Function CalcFunction(FuncName:String;x,y:Real):Real;Forward;
-Function ParseToken:TokenRec;Forward;
+Procedure ParseToken(var Result: TokenRec);Forward;
+
+Function StrToLower(S:String):String;
+Var
+ I:Byte;
+Begin
+ For I:=1 to Length(S)do Begin
+  If S[I] in['A'..'Z']Then S[I]:=Chr(Ord(S[I])+32);
+ End;
+ StrToLower:=S;
+End;
 
 Function IsDigit(c:Char):Boolean;Begin
  IsDigit := c in ['0'..'9'];
@@ -53,17 +63,27 @@ Begin
  Base:=10;
  IsHex:=False;
  If Position<=Length(Expression)Then Begin
-  Case LowerCase(Expression[Position]) of
-   'b': begin Base := 2; Inc(Position) end;
-   'o': begin Base := 8; Inc(Position) end;
-   'x': begin Base := 16; IsHex := True; Inc(Position) end;
+  If StrToLower(Expression[Position])='b'Then Begin
+   Base:=2;
+   Inc(Position);
+  End
+   Else
+  If StrToLower(Expression[Position])='o'Then Begin
+   Base:=8;
+   Inc(Position);
+  End
+   Else
+  If StrToLower(Expression[Position])='x'Then Begin
+   Base:=16;
+   IsHex:=True;
+   Inc(Position)
   End;
  End;
  While (Position <= Length(Expression)) do Begin
-  Case LowerCase(Expression[Position]) of
+  Case UpCase(Expression[Position]) of
    '0'..'9': Value:=Value*Base+(Ord(Expression[Position])-Ord('0'));
-   'a'..'f': If(IsHex)Then
-              Value:=Value*Base+(Ord(LowerCase(Expression[Position]))-Ord('a')+10)
+   'A'..'F': If(IsHex)Then
+              Value:=Value*Base+(Ord(UpCase(Expression[Position]))-Ord('A')+10)
              Else
               Break;
    Else Break;
@@ -84,39 +104,39 @@ Function GetPriority(Op:String):Integer;Begin
  End;
 End;
 
-Function ParseToken:TokenRec;
+Procedure ParseToken(var Result: TokenRec);
 Var
  s:String;
 Begin
  While(Position<=Length(Expression))and IsSpace(Expression[Position]) do Inc(Position);
  If Position>Length(Expression)Then Begin
-  ParseToken.Kind:=_Operator;
-  ParseToken.Symbol:='';
+  Result.Kind:=_Operator;
+  Result.Symbol:='';
   Exit;
  End;
  Case Expression[Position] of
   '0'..'9':Begin
-   ParseToken.Kind:=Number;
-   ParseToken.Value:=GetNumber;
+   Result.Kind:=Number;
+   Result.Value:=GetNumber;
   End;
   '+','-','*','/','%','&',':','^','{','}':Begin
-   ParseToken.Kind:=_Operator;
-   ParseToken.Symbol:=Expression[Position];
+   Result.Kind:=_Operator;
+   Result.Symbol:=Expression[Position];
    Inc(Position);
   End;
   '(':Begin
-   ParseToken.Kind:=OpenParen;
-   ParseToken.Symbol:='(';
+   Result.Kind:=OpenParen;
+   Result.Symbol:='(';
    Inc(Position);
   End;
   ')':Begin
-   ParseToken.Kind:=CloseParen;
-   ParseToken.Symbol:=')';
+   Result.Kind:=CloseParen;
+   Result.Symbol:=')';
    Inc(Position);
   End;
   ';':Begin
-   ParseToken.Kind:=Separator;
-   ParseToken.Symbol:=';';
+   Result.Kind:=Separator;
+   Result.Symbol:=';';
    Inc(Position);
   End;
   'A'..'Z', 'a'..'z':Begin
@@ -125,32 +145,35 @@ Begin
     s:=s+UpCase(Expression[Position]);
     Inc(Position);
    End;
-   ParseToken.Kind:=_Function;
-   ParseToken.Symbol:=s;
+   Result.Kind:=_Function;
+   Result.Symbol:=s;
   End;
    Else
   Begin
    ErrorCode:=1; { Expression invalide }
-   ParseToken.Kind:=_Operator;
-   ParseToken.Symbol:='';
+   Result.Kind:=_Operator;
+   Result.Symbol:='';
   End;
  End;
 End;
 
 Function CalcFunction(FuncName:String;x,y:Real):Real;Begin
- Case FuncName of
-  'ABS': CalcFunction := Abs(x);
-  'SQRT': if x >= 0 then CalcFunction := Sqrt(x) else ErrorCode := 2;
-  'SIN': CalcFunction:=Sin(x);
-  'COS': CalcFunction:=Cos(x);
-  'TAN': CalcFunction:=Sin(x)/Cos(x);
-  'MAX': CalcFunction:=x;
-  'MIN': CalcFunction:=x;
-  'PI': CalcFunction:=3.14159265359;
-  Else Begin
-   ErrorCode:=3; { Fonction inconnu }
-   CalcFunction:=0;
-  End;
+ If FuncName='ABS'Then CalcFunction:=Abs(x) Else
+ If FuncName='SQRT'Then Begin
+  If x>=0 Then CalcFunction:=Sqrt(x)
+          Else ErrorCode:=2;
+ End
+  Else
+ If FuncName='SIN'Then CalcFunction:=Sin(x) Else
+ If FuncName='COS'Then CalcFunction:=Cos(x) Else
+ If FuncName='TAN'Then CalcFunction:=Sin(x)/Cos(x) Else
+ If FuncName='MAX'Then CalcFunction:=x Else
+ If FuncName='MIN'Then CalcFunction:=x Else
+ If FuncName='PI'Then CalcFunction:=3.14159265359
+  Else
+ Begin
+  ErrorCode:=3; { Fonction inconnu }
+  CalcFunction:=0;
  End;
 End;
 
@@ -160,24 +183,25 @@ Var
  OperStack:Array[1..MaxStack] of TokenRec;
  ValTop,OpTop:Integer;
  Token:TokenRec;
+ CurrentToken: TokenRec;
 Begin
  ValTop:=0;
  OpTop:=0;
  ErrorCode:=0;
- Position:=1;  { R‚initialise la position de d‚part de l'expression }
+ Position:=1;  { Rï¿½initialise la position de dï¿½part de l'expression }
  While ErrorCode = 0 do Begin
-  Token:=ParseToken;
-  Case Token.Kind of
+  ParseToken(CurrentToken);
+  Case CurrentToken.Kind of
    Number:Begin
     Inc(ValTop);
-    ValueStack[ValTop]:=Token.Value;
+    ValueStack[ValTop]:=CurrentToken.Value;
    End;
    _Operator:Begin
-    If Token.Symbol=''Then Break;  { Fin de l'expression }
-     { Traitement des op‚rateurs avec le pr‚c‚dent haut ou ‚gale }
-    While(OpTop>0)and(GetPriority(OperStack[OpTop].Symbol) >= GetPriority(Token.Symbol)) do Begin
+    If CurrentToken.Symbol=''Then Break;  { Fin de l'expression }
+     { Traitement des opï¿½rateurs avec le prï¿½cï¿½dent haut ou ï¿½gale }
+    While(OpTop>0)and(GetPriority(OperStack[OpTop].Symbol) >= GetPriority(CurrentToken.Symbol)) do Begin
      If ValTop<2 Then Begin
-      ErrorCode := 1;  { Plus d'espace pour les op‚randes }
+      ErrorCode := 1;  { Plus d'espace pour les opï¿½randes }
       Break;
      End;
      Case OperStack[OpTop].Symbol[1] of
@@ -187,7 +211,7 @@ Begin
       '/':If ValueStack[ValTop]<>0 Then
            ValueStack[ValTop-1] := ValueStack[ValTop-1] / ValueStack[ValTop]
           Else
-           ErrorCode:=2;  { Division par z‚ro }
+           ErrorCode:=2;  { Division par zï¿½ro }
       '%':If ValueStack[ValTop]<>0 Then
            ValueStack[ValTop-1] := Trunc(ValueStack[ValTop-1]) mod Trunc(ValueStack[ValTop])
           Else
@@ -202,12 +226,12 @@ Begin
      Dec(OpTop);
     End;
     Inc(OpTop);
-    OperStack[OpTop]:=Token;
+    OperStack[OpTop]:=CurrentToken;
    End;
    _Function:Begin
     Inc(OpTop);
-    OperStack[OpTop]:=Token;
-    Token:=ParseToken;  { Demande le paramŠtre de la fonction }
+    OperStack[OpTop]:=CurrentToken;
+    ParseToken(Token);  { Demande le paramï¿½tre de la fonction }
     If Token.Kind<>Number Then Begin
      ErrorCode:=1;
      Break;
@@ -218,7 +242,7 @@ Begin
    End;
    OpenParen:Begin
     Inc(OpTop);
-    OperStack[OpTop] := Token;
+    OperStack[OpTop] := CurrentToken;
    End;
    CloseParen:Begin
     While (OpTop>0)and(OperStack[OpTop].Kind <> OpenParen) do Begin
@@ -239,13 +263,13 @@ Begin
      Dec(OpTop);
     End;
     If OpTop > 0 Then
-     Dec(OpTop)  { EnlŠve les parenthRemove opening parenthesis }
+     Dec(OpTop)  { Enlï¿½ve les parenthRemove opening parenthesis }
     Else
-     ErrorCode := 6;  { Non correspondance des parenthŠses }
+     ErrorCode := 6;  { Non correspondance des parenthï¿½ses }
    End;
   End;
  End;
-  { Traitement des op‚rateurs }
+  { Traitement des opï¿½rateurs }
  While (OpTop > 0) and (ErrorCode = 0) do Begin
   If ValTop<2 Then Begin
    ErrorCode := 1;
@@ -304,11 +328,12 @@ BEGIN
  ErrorCode := 0;
   { Analyse la ligne de commande }
  For i:=1 to ParamCount do Begin
-  If(ParamStr(i)[1]='/')and(UpCase(ParamStr(i)[2])='T')Then Begin
-   If Length(ParamStr(i)) >= 4 Then OutputFormat:=UpCase(ParamStr(i)[4]);
+  CurrParam:=ParamStr(i);
+  If(CurrParam[1]='/')and(UpCase(CurrParam[2])='T')Then Begin
+   If Length(CurrParam)>=4 Then OutputFormat:=UpCase(CurrParam[4]);
   End
    Else
-  Expression:=Expression+ParamStr(i);
+  Expression:=Expression+CurrParam;
  End;
  R:=Evaluate;
  If ErrorCode <> 0 Then Begin
