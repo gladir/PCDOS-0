@@ -53,6 +53,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<td>Cette commande permet d'effectuer un contrôle de redondance cyclique.</td>
 		</tr>
 		<tr>
+			<td><b>DATAMON.PAS</b></td>
+			<td>Cette commande permet de lancer le moniteur de données.</td>
+		</tr>
+		<tr>
 			 <td><b>DEBUG.PAS</b></td>
 			 <td>Cette commande permet de deboguer un programme.</td>
 		</tr>
