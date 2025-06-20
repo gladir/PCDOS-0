@@ -45,6 +45,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<td>Cette commande permet de comparer deux fichiers.</td>
 		</tr>
 		<tr>
+			<td><b>CONFIG.PAS</b></td>
+			<td>Cette commande permet de fixer la configuration de Stacker (STACKER.INI).</td>
+		</tr>
+		<tr>
 			<td><b>CRC.PAS</b></td>
 			<td>Cette commande permet d'effectuer un contrôle de redondance cyclique.</td>
 		</tr>
