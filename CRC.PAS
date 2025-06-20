@@ -166,9 +166,9 @@ BEGIN
   WriteLn;
   WriteLn('Syntaxe : CRC [drive:][path][filespec][/s][/p] [/?]');
   WriteLn;
-  WriteLn('  filespec   Fichiers a vï¿½rifier');
-  WriteLn('  /s         Traiter les sous-rï¿½pertoires');
-  WriteLn('  /p         Pause apres chaque ï¿½cran');
+  WriteLn('  filespec   Fichiers a v‚rifier');
+  WriteLn('  /s         Traiter les sous-r‚pertoires');
+  WriteLn('  /p         Pause apres chaque ‚cran');
   WriteLn('  /?         Afficher cette aide');
   Halt;
  End;
