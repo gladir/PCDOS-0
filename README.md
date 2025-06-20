@@ -81,6 +81,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<td>Cette commande permet de lancer un clone du MS-DOS Shell.</td>
 		</tr>
 		<tr>
+			<td><b>DYNALOAD.PAS</b></td>
+			<td>Cette commande permet de charger dynamiquement des pilotes.</td>
+		</tr>
+		<tr>
 			<td><b>E.PAS</b></td>
 			<td>Cette commande permet d'éditer un fichier texte ASCII.</td>
 		</tr>
