@@ -1,7 +1,7 @@
 { @author: Sylvain Maltais (support@gladir.com)
   @created: 2025
   @website(https://www.gladir.com/pcdos-0)
-  @abstract(Target: Turbo Pascal 7, Free Pascal 3.2)
+  @abstract(Target: Turbo Pascal 7)
 }
 
 Program DATAMON;
