@@ -43,7 +43,11 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 		<tr>
 			<td><b>COMP.PAS</b></td>
 			<td>Cette commande permet de comparer deux fichiers.</td>
-		</tr>	
+		</tr>
+		<tr>
+			<td><b>CRC.PAS</b></td>
+			<td>Cette commande permet d'effectuer un contrôle de redondance cyclique.</td>
+		</tr>
 		<tr>
 			 <td><b>DEBUG.PAS</b></td>
 			 <td>Cette commande permet de deboguer un programme.</td>
