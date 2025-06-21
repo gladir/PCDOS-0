@@ -93,6 +93,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<td>Cette commande permet de lancer l'éditeur en ligne de commande.</td>
 		</tr>
 		<tr>
+			<td><b>EJECT.PAS</b></td>
+			<td>Cette comamnde permet d'éjecter un disque amovible.</td>
+		</tr>
+		<tr>
 			<td><b>EXE2BIN.PAS</b></td>
 			<td>Cette commande permet de convertir un fichier EXE en binaire (COM).</td>
 		</tr>
