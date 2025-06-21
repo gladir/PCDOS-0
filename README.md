@@ -141,6 +141,10 @@ Voici la liste des différents fichiers proposés dans PCDOS-0 :
 			<td>Cette commande permet de déplacer un fichier.</td>
 		</tr>
 		<tr>
+			<td><b>NLSFUNC.PAS</b></td>
+			<td>Cette commande permet d'effectuer la gestion du pays et des conventions internationales du système d'exploitation.</td>
+		</tr>
+		<tr>
 			<td><b>REPLACE.PAS</b></td>
 			<td>Cette commande permet de remplacer un fichier. Cette commande est un équivalent du DOS.</td>
 		</tr>
