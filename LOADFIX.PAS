@@ -24,25 +24,16 @@ Var
  ExecParams:String;
  MemBlock:Pointer;
 
-Procedure ShowHelp;Begin
- WriteLn('LOADFIX - Chargement fixe');
- WriteLn('Syntaxe: LOADFIX [drive:][path]filename [program-parameters] [/?]');
- WriteLn;
- WriteLn('  filename            Programme a charger');
- WriteLn('  program-parameters  Parametres du programme');
- WriteLn('  /?                  Affiche cette aide');
-End;
-
 Procedure BuildCommandLine;
 Var
  i:Integer;
 Begin
- ExecPath := '';
- ExecParams := '';
+ ExecPath:='';
+ ExecParams:='';
  If ParamCount=0 Then Exit;
  ExecPath:=ParamStr(1);
  For i:=2 to ParamCount do ExecParams:=ExecParams+' '+ParamStr(i);
-end;
+End;
 
 Function AllocateBuffer:Boolean;
 Var
@@ -57,79 +48,72 @@ Begin
  Intr($21,Regs);
  MaxMem:=Regs.BX;  { Taille max en paragraphes }
   { Essaie d'allouer au-dessus de 64K }
- Rrepeat
+ Repeat
   FillChar(Regs, SizeOf(Regs), 0);
-  Regs.AH := $48;  { Allocate memory }
-  Regs.BX := BUFFER_SIZE div 16;  { En paragraphes }
-  Intr($21, Regs);
+  Regs.AH:=$48;  { Allocate memory }
+  Regs.BX:=BUFFER_SIZE div 16;  { En paragraphes }
+  Intr($21,Regs);
+  If(Regs.Flags and 1)=0 Then Begin
+   If Regs.AX>=$1000 Then Begin  { Au-dessus de 64K (4096) }
+    MemBlock := Ptr(Regs.AX, 0);  { Segment:Offset }
+    AllocateBuffer := True;
+    Break;
+   End;
+    { Libäre la mÇmoire si trop basse }
+   FillChar(Regs, SizeOf(Regs), 0);
+   Regs.AH:=$49;  { Libäre la mÇmoire }
+   Regs.ES:=Regs.AX;
+   Intr($21,Regs);
+  End;
+ Until MaxMem<=(BUFFER_SIZE div 16);  { Plus assez de mÇmoire }
+End;
 
-    if (Regs.Flags and 1) = 0 then
-    begin
-      if Regs.AX >= $1000 then  { Au-dessus de 64K (4096) }
-      begin
-        MemBlock := Ptr(Regs.AX, 0);  { Segment:Offset }
-        AllocateBuffer := True;
-        Break;
-      end;
-      { Lib√®re la m√©moire si trop basse }
-      FillChar(Regs, SizeOf(Regs), 0);
-      Regs.AH := $49;  { Free memory }
-      Regs.ES := Regs.AX;
-      Intr($21, Regs);
-    end;
-  until MaxMem <= (BUFFER_SIZE div 16);  { Plus assez de m√©moire }
-end;
+Procedure FreeBuffer;
+Var
+ Regs:Registers;
+Begin
+ If MemBlock<>NIL Then Begin
+  FillChar(Regs,SizeOf(Regs),0);
+  Regs.AH:=$49;  { Libäre la mÇmoire }
+  Regs.ES:=Seg(MemBlock^);
+  Intr($21,Regs);
+ End;
+End;
 
-procedure FreeBuffer;
-var
-  Regs: Registers;
-begin
-  if MemBlock <> nil then
-  begin
-    FillChar(Regs, SizeOf(Regs), 0);
-    Regs.AH := $49;  { Free memory }
-    Regs.ES := Seg(MemBlock^);
-    Intr($21, Regs);
-  end;
-end;
+Function ExecuteProgram:Integer;
+Var
+ ExecRec:TExecRec;
+Begin
+ FillChar(ExecRec, SizeOf(ExecRec),0);
+ With ExecRec do Begin
+  EnvStr:=NIL;
+  CmdLine:=ExecParams;
+  {$I-}
+  SwapVectors;
+  Exec(ExecPath, ExecParams);
+  SwapVectors;
+  {$I+}
+ End;
+ ExecuteProgram:=DosError;
+End;
 
-function ExecuteProgram: Integer;
-var
-  ExecRec: TExecRec;
-begin
-  FillChar(ExecRec, SizeOf(ExecRec), 0);
-  with ExecRec do
-  begin
-    EnvStr := nil;
-    CmdLine := ExecParams;
-    {$I-}
-    SwapVectors;
-    Exec(ExecPath, ExecParams);
-    SwapVectors;
-    {$I+}
-  end;
-  ExecuteProgram := DosError;
-end;
-
-begin
-  if (ParamCount = 0) or (ParamStr(1) = '/?') then
-  begin
-    ShowHelp;
-    Exit;
-  end;
-
-  BuildCommandLine;
-
-  if not AllocateBuffer then
-  begin
-    WriteLn('Erreur: Impossible d''allouer la memoire tampon');
-    Halt(1);
-  end;
-
-  { Le buffer est allou√©, ce qui force le programme √† charger au-dessus de 64K }
-
-  if ExecuteProgram <> 0 then
-    WriteLn('Erreur lors de l''execution de ', ExecPath);
-
-  FreeBuffer;
+BEGIN
+ If(ParamStr(1)='/?')or(ParamStr(1)='--help')or(ParamStr(1)='-h')or
+   (ParamStr(1)='/h')or(ParamStr(1)='/H')Then Begin
+  WriteLn('LOADFIX - Cette commande permet de fixer le chargement au dessus du 64 Ko');
+  WriteLn('Syntaxe: LOADFIX [drive:][path]filename [program-parameters] [/?]');
+  WriteLn;
+  WriteLn('  filename            Programme a charger');
+  WriteLn('  program-parameters  Parametres du programme');
+  WriteLn('  /?                  Affiche cette aide');
+  Halt;
+ End;
+ BuildCommandLine;
+ If Not(AllocateBuffer)Then Begin
+  WriteLn('Erreur: Impossible d''allouer la memoire tampon');
+  Halt(1);
+ End;
+  { Le tampon est allouÇ, ce qui force le programme Ö charger au-dessus de 64 Ko }
+ If ExecuteProgram<>0 Then WriteLn('Erreur lors de l''exÇcution de ',ExecPath);
+ FreeBuffer;
 END.
